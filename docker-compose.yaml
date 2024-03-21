@@ -12,6 +12,8 @@ services:
       - 22181:2181
     networks:
       - kafka-network
+    profiles: 
+      - kafka
   kafka:
     logging:
       driver: none
@@ -29,11 +31,11 @@ services:
       KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
     networks:
       - kafka-network
+    profiles: 
+      - kafka
       
   mongo-api:
     restart: on-failure:10
-    depends_on:
-      - kafka
     build:
       context: ./.
       dockerfile: ./mongoAPIServer/Dockerfile
@@ -43,6 +45,10 @@ services:
       KAFKA_URI: kafka:9092
     networks:
       - kafka-network
+    depends_on:
+      - kafka
+    #stdin_open: true # docker run -i
+    #tty: true        # docker run -t
     # extra_hosts:
     #  - "host.docker.internal:host-gateway"
 networks:
