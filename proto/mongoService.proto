@@ -1,0 +1,17 @@
+syntax = "proto3";
+
+package catfactService;
+
+option go_package = "./pb";
+
+service CatFactService{
+    rpc GetFacts(GetFactsRequest) returns (GetFactsResponse);
+}
+
+message GetFactsRequest{
+    int64 pageSize = 1;
+    int64 page = 2;
+}
+message GetFactsResponse{
+    repeated string facts = 1;
+}

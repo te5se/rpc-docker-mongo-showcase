@@ -1,27 +1,34 @@
 version: "3"
 
 services:
+  mongo-db:
+    restart: on-failure:10
+    image: mongo
+    ports:
+     - 28000:27017
+    networks:
+      - my-network
   zookeeper:
+    restart: on-failure:10
     logging:
       driver: none
     image: confluentinc/cp-zookeeper:7.4.4
     environment:
       ZOOKEEPER_CLIENT_PORT: 2181
       ZOOKEEPER_TICK_TIME: 2000
-    ports:
-      - 22181:2181
+    #ports:
+    #  - 22181:2181
     networks:
-      - kafka-network
-    profiles: 
-      - kafka
+      - my-network
+    #profiles: 
+    #  - kafka
   kafka:
+    restart: on-failure:10
     logging:
       driver: none
     image: confluentinc/cp-kafka:7.4.4
     depends_on:
       - zookeeper
-    ports:
-      - 29092:29092
     environment:
       KAFKA_BROKER_ID: 1
       KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
@@ -30,27 +37,42 @@ services:
       KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT
       KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
     networks:
-      - kafka-network
-    profiles: 
-      - kafka
+      - my-network
+    #profiles: 
+    #  - kafka
       
   mongo-api:
     restart: on-failure:10
     build:
       context: ./.
       dockerfile: ./mongoAPIServer/Dockerfile
-    ports:
-      - 8123:8123
     environment:
       KAFKA_URI: kafka:9092
+      MONGO_URI: mongo-db:27017      
     networks:
-      - kafka-network
+      - my-network
     depends_on:
       - kafka
+      - mongo-db
+  scheduler:
+    restart: on-failure:10
+    build:
+      context: ./.
+      dockerfile: ./scheduler/Dockerfile
+    ports:
+      - 9000:8081
+    environment:
+      KAFKA_URI: kafka:9092
+      MONGO_API_URI: mongo-api:8080
+    networks:
+      - my-network
+    depends_on:
+      - mongo-api
+      - kafka  
     #stdin_open: true # docker run -i
     #tty: true        # docker run -t
     # extra_hosts:
     #  - "host.docker.internal:host-gateway"
 networks:
-  kafka-network:
+  my-network:
     driver: bridge

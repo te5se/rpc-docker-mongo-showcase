@@ -15,7 +15,7 @@ COPY . ./
 
 
 
-RUN cd mongoAPIServer && go build -o /godocker
+RUN cd scheduler && go build -o /godocker
 # tells Docker that the container listens on specified network ports at runtime
 
 FROM ubuntu
@@ -26,8 +26,7 @@ EXPOSE 8123
 
 # command to be used to execute when the image is used to start a container
 CMD ["/app/wait-for-it.sh", "kafka:9092"]
-CMD ["/app/wait-for-it.sh", "mongo:9092"]
-CMD ["/godocker"]
+CMD ["/app/wait-for-it.sh", "mongo-api:8080", "--", "/godocker"]
 
 #ENTRYPOINT ["tail"]
 #CMD ["-f","/dev/null"]
